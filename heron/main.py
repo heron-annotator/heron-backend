@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 
+from heron.routers import project
+
 app = FastAPI()
 
-@app.get("/")
-async def read_root():
-    return {"message": "Hello, World!"}
+app.include_router(project.router)
