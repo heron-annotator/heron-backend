@@ -1,0 +1,47 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "heron-backend"
+version = "0.0.0"
+description = "Backend for Heron Annotator"
+readme = "README.md"
+requires-python = "==3.13"
+license = "AGPL-3.0-or-later"
+keywords = []
+authors = [{ name = "Silvano Cerza", email = "silvanocerza@gmail.com" }]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: Implementation :: CPython",
+    "Programming Language :: Python :: Implementation :: PyPy",
+]
+dependencies = []
+
+[project.urls]
+Documentation = "https://github.com/Silvano Cerza/heron-backend#readme"
+Issues = "https://github.com/Silvano Cerza/heron-backend/issues"
+Source = "https://github.com/Silvano Cerza/heron-backend"
+
+[tool.hatch.version]
+path = "src/heron_backend/__about__.py"
+
+[tool.hatch.envs.types]
+extra-dependencies = ["mypy>=1.0.0"]
+[tool.hatch.envs.types.scripts]
+check = "mypy --install-types --non-interactive {args:src/heron_backend tests}"
+
+[tool.coverage.run]
+source_pkgs = ["heron_backend", "tests"]
+branch = true
+parallel = true
+omit = ["src/heron_backend/__about__.py"]
+
+[tool.coverage.paths]
+heron_backend = ["src/heron_backend", "*/heron-backend/src/heron_backend"]
+tests = ["tests", "*/heron-backend/tests"]
+
+[tool.coverage.report]
+exclude_lines = ["no cov", "if __name__ == .__main__.:", "if TYPE_CHECKING:"]
