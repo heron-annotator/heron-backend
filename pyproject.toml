@@ -18,7 +18,12 @@ classifiers = [
     "Programming Language :: Python :: Implementation :: CPython",
     "Programming Language :: Python :: Implementation :: PyPy",
 ]
-dependencies = ["fastapi[standard]"]
+dependencies = [
+    "fastapi[standard]",
+    "argon2-cffi",
+    "pydantic-settings",
+    "pyjwt",
+]
 
 [project.urls]
 Documentation = "https://github.com/Silvano Cerza/heron-backend#readme"
