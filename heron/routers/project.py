@@ -8,7 +8,7 @@ router = APIRouter()
 class Project(BaseModel):
     id: str
     owner: str
-    members: list[int]
+    members: list[str]
     title: str
     description: str
 
@@ -19,13 +19,13 @@ _projects: dict[str, Project] = {}
 
 
 class ProjectCreateIn(BaseModel):
-    members: list[int]
+    members: list[str]
     title: str
     description: str
 
 
 class ProjectUpdateIn(BaseModel):
-    members: list[int] | None = None
+    members: list[str] | None = None
     title: str | None = None
     description: str | None = None
 
