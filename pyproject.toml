@@ -27,27 +27,37 @@ dependencies = [
 ]
 
 [project.urls]
-Documentation = "https://github.com/Silvano Cerza/heron-backend#readme"
-Issues = "https://github.com/Silvano Cerza/heron-backend/issues"
-Source = "https://github.com/Silvano Cerza/heron-backend"
+Documentation = "https://github.com/heron-annotator/heron-backend#readme"
+Issues = "https://github.com/heron-annotator/heron-backend/issues"
+Source = "https://github.com/heron-annotator/heron-backend"
 
-[tool.hatch.version]
-path = "src/heron_backend/__about__.py"
+[tool.hatch.build.targets.wheel]
+packages = ["heron"]
+
+[tool.hatch.envs.default]
+installer = "uv"
+extra-dependencies = ["httpx", "pytest", "pytest-asyncio", "pytest-cov"]
+
+[tool.hatch.envs.default.scripts]
+test = "pytest --cov=heron {args:tests}"
+test-nocov = "pytest {args:tests}"
+cov-combine = "coverage combine"
+cov-report = "coverage report"
 
 [tool.hatch.envs.types]
 extra-dependencies = ["mypy>=1.0.0"]
+
 [tool.hatch.envs.types.scripts]
-check = "mypy --install-types --non-interactive {args:src/heron_backend tests}"
+check = "mypy --install-types --non-interactive {args:heron tests}"
 
 [tool.coverage.run]
-source_pkgs = ["heron_backend", "tests"]
+source_pkgs = ["heron"]
 branch = true
 parallel = true
-omit = ["src/heron_backend/__about__.py"]
+omit = []
 
 [tool.coverage.paths]
-heron_backend = ["src/heron_backend", "*/heron-backend/src/heron_backend"]
-tests = ["tests", "*/heron-backend/tests"]
+heron = ["heron"]
 
 [tool.coverage.report]
 exclude_lines = ["no cov", "if __name__ == .__main__.:", "if TYPE_CHECKING:"]
