@@ -1,6 +1,9 @@
+import uuid
 from datetime import datetime, timedelta, timezone
+from logging import getLogger
 from typing import Annotated
 
+import asyncpg
 import jwt
 from argon2 import PasswordHasher
 from fastapi import APIRouter, Depends
@@ -9,9 +12,13 @@ from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from pydantic import BaseModel, EmailStr
 
 from heron.config import settings
+from heron.db import get_connection
+from heron.db import user as db_user
 
 JWT_ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
+
+logger = getLogger(__name__)
 
 router = APIRouter()
 _hasher = PasswordHasher()
@@ -30,35 +37,42 @@ class UserRegister(UserBase):
     model_config = {"extra": "forbid"}
 
 
-class UserDB(UserBase):
-    id: str
-    password_hash: str
-
-
 class Token(BaseModel):
     access_token: str
     token_type: str
 
 
-# Temp stuff to simulate a DB
-_last_id: int = 0
-_users: dict[str, UserDB] = {}
-
-
 @router.post("/register")
-def register(user: UserRegister):
-    global _last_id
-    global _users
-    hash = _hasher.hash(user.password)
-    id = str(_last_id)
-    # NOTE: We're not checking for username clashes, but whatever for now
-    _users[id] = UserDB(
-        id=id,
-        username=user.username,
-        email=user.email,
-        password_hash=hash,
-    )
-    _last_id += 1
+async def register(
+    user: UserRegister, conn: Annotated[asyncpg.Connection, Depends(get_connection)]
+):
+    # Not the best way to handle email and username uniqueness, it does the job
+    # for now.
+    # I'll find a more elegant way later on.
+    if await db_user.email_exists(conn, user.email):
+        logger.info(f"Email {user.email} already exists")
+        raise HTTPException(status_code=400, detail="Email already in use")
+
+    if await db_user.username_exists(conn, user.username):
+        logger.info(f"Username {user.username} already exists")
+        raise HTTPException(status_code=400, detail="Username already in use")
+
+    id = uuid.uuid4()
+    try:
+        await db_user.create(
+            conn,
+            db_user.User(
+                id=id,
+                name=user.username,
+                email=user.email,
+                password_hash=_hasher.hash(user.password),
+            ),
+        )
+    except Exception as exc:
+        logger.exception(exc)
+        raise HTTPException(status_code=500, detail="Failed to register user")
+
+    return {"user_id": id.hex}
 
 
 def create_token(*, data: dict, expires_delta: timedelta) -> Token:
@@ -77,7 +91,11 @@ def create_token(*, data: dict, expires_delta: timedelta) -> Token:
     return Token(access_token=access_token, token_type="bearer")
 
 
-def authenticate_user(username: str, password: str) -> UserDB | None:
+async def authenticate_user(
+    conn: Annotated[asyncpg.Connection, Depends(get_connection)],
+    username: str,
+    password: str,
+) -> db_user.User | None:
     """
     Authenticates user given username and password.
 
@@ -87,17 +105,18 @@ def authenticate_user(username: str, password: str) -> UserDB | None:
     :param username: User's username
     :param password: User's non hashed password
 
-    :return: Return UserDB instance if username and password match, else None.
+    :return: Return User instance if username and password match, else None.
     """
-    for user in _users.values():
-        if user.username != username:
-            continue
-        if _hasher.verify(user.password_hash, password):
-            return user
+    user = await db_user.get_by_username(conn, username)
+    if user and _hasher.verify(user.password_hash, password):
+        return user
     return None
 
 
-def get_current_user(token: str = Depends(oauth2_scheme)) -> UserDB:
+async def get_current_user(
+    conn: Annotated[asyncpg.Connection, Depends(get_connection)],
+    token: str = Depends(oauth2_scheme),
+) -> db_user.User:
     """
     Get the current user from the token.
 
@@ -117,21 +136,25 @@ def get_current_user(token: str = Depends(oauth2_scheme)) -> UserDB:
     if user_id is None:
         raise credentials_exception
 
-    user = _users.get(user_id)
+    user = await db_user.get_by_id(conn, uuid.UUID(user_id))
     if user is None:
         raise credentials_exception
 
     return user
 
 
-@router.get("/user/me", response_model=UserBase)
-def get_user(current_user: UserDB = Depends(get_current_user)):
-    return current_user
+@router.get("/user/me")
+def get_user(current_user: db_user.User = Depends(get_current_user)):
+    return UserBase(username=current_user.name, email=current_user.email)
 
 
 @router.post("/token")
-def login(form_data: Annotated[OAuth2PasswordRequestForm, Depends()]):
-    user = authenticate_user(form_data.username, form_data.password)
+async def login(
+    conn: Annotated[asyncpg.Connection, Depends(get_connection)],
+    form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
+):
+    user = await authenticate_user(conn, form_data.username, form_data.password)
+    print(f"{user=}")
     if not user:
         raise HTTPException(
             status_code=401,
@@ -140,5 +163,5 @@ def login(form_data: Annotated[OAuth2PasswordRequestForm, Depends()]):
         )
 
     expiration_delta = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    token = create_token(data={"sub": user.id}, expires_delta=expiration_delta)
+    token = create_token(data={"sub": user.id.hex}, expires_delta=expiration_delta)
     return token

@@ -27,8 +27,8 @@ async def create_tables(conn: asyncpg.Pool):
     await conn.execute(
         "CREATE TABLE IF NOT EXISTS users ("
         "id UUID PRIMARY KEY, "
-        "name TEXT NOT NULL, "
-        "email TEXT NOT NULL, "
+        "username TEXT NOT NULL UNIQUE, "
+        "email TEXT NOT NULL UNIQUE, "
         "password_hash TEXT NOT NULL"
         ")"
     )
