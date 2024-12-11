@@ -63,7 +63,7 @@ async def register(
             conn,
             db_user.User(
                 id=id,
-                name=user.username,
+                username=user.username,
                 email=user.email,
                 password_hash=_hasher.hash(user.password),
             ),
@@ -145,7 +145,7 @@ async def get_current_user(
 
 @router.get("/user/me")
 def get_user(current_user: db_user.User = Depends(get_current_user)):
-    return UserBase(username=current_user.name, email=current_user.email)
+    return UserBase(username=current_user.username, email=current_user.email)
 
 
 @router.post("/token")

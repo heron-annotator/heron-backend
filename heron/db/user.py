@@ -10,7 +10,7 @@ class User(BaseModel):
     """
 
     id: uuid.UUID
-    name: str
+    username: str
     email: str
     password_hash: str
 
@@ -24,7 +24,7 @@ async def create(conn: asyncpg.Connection, user: User) -> str:
         "(id, username, email, password_hash) "
         "VALUES ($1, $2, $3, $4)",
         user.id,
-        user.name,
+        user.username,
         user.email,
         user.password_hash,
     )
@@ -42,7 +42,7 @@ async def get_by_id(conn: asyncpg.Connection, user_id: uuid.UUID) -> User | None
         return None
     return User(
         id=record["id"],
-        name=record["username"],
+        username=record["username"],
         email=record["email"],
         password_hash=record["password_hash"],
     )
@@ -62,7 +62,7 @@ async def get_by_username(conn: asyncpg.Connection, username: str) -> User | Non
         return None
     return User(
         id=record["id"],
-        name=record["username"],
+        username=record["username"],
         email=record["email"],
         password_hash=record["password_hash"],
     )
@@ -80,7 +80,7 @@ async def get_by_email(conn: asyncpg.Connection, email: str) -> User | None:
         return None
     return User(
         id=record["id"],
-        name=record["username"],
+        username=record["username"],
         email=record["email"],
         password_hash=record["password_hash"],
     )
