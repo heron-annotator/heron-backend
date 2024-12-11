@@ -1,0 +1,12 @@
+services:
+  postgres:
+    container_name: postgres
+    image: postgres:latest
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB?error}
+      - POSTGRES_USER=${POSTGRES_USER?error}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD?error}
+    ports:
+      - "5432:5432"
+    volumes:
+      - ${PWD}/postgres_data:/var/lib/postgresql/data

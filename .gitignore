@@ -191,3 +191,5 @@ pyrightconfig.json
 
 ### Zed ###
 .zed/*
+
+postgres_data/*
