@@ -16,4 +16,4 @@ class Settings(BaseSettings):
 
 @lru_cache()
 def settings() -> Settings:
-    return Settings() # pyright: ignore
+    return Settings()  # pyright: ignore
