@@ -72,7 +72,7 @@ async def register(
         logger.exception(exc)
         raise HTTPException(status_code=500, detail="Failed to register user")
 
-    return {"user_id": id.hex}
+    return {"user_id": id}
 
 
 def create_token(*, data: dict, expires_delta: timedelta) -> Token:
@@ -162,5 +162,5 @@ async def login(
         )
 
     expiration_delta = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    token = create_token(data={"sub": user.id.hex}, expires_delta=expiration_delta)
+    token = create_token(data={"sub": str(user.id)}, expires_delta=expiration_delta)
     return token
