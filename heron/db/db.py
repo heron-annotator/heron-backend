@@ -52,5 +52,5 @@ async def get_connection(request: Request) -> AsyncGenerator[asyncpg.Connection,
     """
     Dependency used to get a connection from the global connection pool.
     """
-    async with request.app.state.db_pool.acquire() as conn:
+    async with request.state.db_pool.acquire() as conn:
         yield conn

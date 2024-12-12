@@ -8,10 +8,12 @@ from heron.routers import project, user
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    app.state.db_pool = await create_connection_pool()
-    await create_tables(app.state.db_pool)
-    yield
-    await app.state.db_pool.close()
+    connection_pool = await create_connection_pool()
+    await create_tables(connection_pool)
+    yield {
+        "db_pool": connection_pool,
+    }
+    await connection_pool.close()
 
 
 app = FastAPI(lifespan=lifespan)
