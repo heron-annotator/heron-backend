@@ -61,3 +61,6 @@ heron = ["heron"]
 
 [tool.coverage.report]
 exclude_lines = ["no cov", "if __name__ == .__main__.:", "if TYPE_CHECKING:"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
