@@ -1,4 +1,6 @@
+import uuid
 from collections.abc import Callable
+from io import BytesIO
 from typing import Tuple
 
 import asyncpg
@@ -63,3 +65,59 @@ def create_user(
         return user_id, token
 
     return _create_user
+
+
+@pytest.fixture
+def create_project(
+    test_client: TestClient,
+    db: asyncpg.Connection,
+) -> Callable[..., str]:
+    """
+    Returns a function that creates a project and returns its id
+    """
+
+    def _create_project(
+        user_token: str, title: str, description: str, members: list[uuid.UUID] = []
+    ) -> str:
+        res = test_client.post(
+            "/project",
+            json={
+                "members": [],
+                "title": title,
+                "description": description,
+            },
+            headers={
+                "Authorization": f"Bearer {user_token}",
+            },
+        )
+        assert res.status_code == 200
+        return res.json()["project_id"]
+
+    return _create_project
+
+
+@pytest.fixture
+def create_dataset(
+    test_client: TestClient,
+    db: asyncpg.Connection,
+) -> Callable[..., str]:
+    """
+    Returns a function that creates a dataset and returns its id
+    """
+
+    def _create_dataset(
+        user_token: str, project_id: uuid.UUID, file: Tuple[str, bytes]
+    ) -> str:
+        res = test_client.post(
+            f"/project/{project_id}/dataset",
+            headers={
+                "Authorization": f"Bearer {user_token}",
+            },
+            files=[
+                ("file", (file[0], BytesIO(file[1]))),
+            ],
+        )
+        assert res.status_code == 200
+        return res.json()["dataset_id"]
+
+    return _create_dataset

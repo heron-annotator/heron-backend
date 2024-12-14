@@ -3,7 +3,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 
 from heron.db import create_connection_pool, create_tables
-from heron.routers import project, user
+from heron.routers import dataset, project, user
 
 
 @asynccontextmanager
@@ -20,3 +20,4 @@ app = FastAPI(lifespan=lifespan)
 
 app.include_router(project.router)
 app.include_router(user.router)
+app.include_router(dataset.router)
