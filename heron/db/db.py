@@ -62,6 +62,16 @@ async def create_tables(conn: asyncpg.Pool):
         "color VARCHAR(7) NOT NULL"
         ")"
     )
+    await conn.execute(
+        "CREATE TABLE IF NOT EXISTS categories ("
+        "id UUID PRIMARY KEY, "
+        "label_id UUID references labels(id) ON DELETE CASCADE, "
+        "project_id UUID references projects(id), "
+        "dataset_id UUID references datasets(id) ON DELETE CASCADE, "
+        "start_offset INTEGER NOT NULL, "
+        "end_offset INTEGER NOT NULL"
+        ")"
+    )
 
 
 async def get_connection(request: Request) -> AsyncGenerator[asyncpg.Connection, None]:

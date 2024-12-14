@@ -146,3 +146,37 @@ def create_label(
         return res.json()["label_id"]
 
     return _create_label
+
+
+@pytest.fixture
+def create_category(
+    test_client: TestClient,
+    db: asyncpg.Connection,
+) -> Callable[..., str]:
+    """
+    Returns a function that creates a category and returns its id
+    """
+
+    def _create_category(
+        user_token: str,
+        project_id: uuid.UUID,
+        dataset_id: uuid.UUID,
+        label_id: uuid.UUID,
+        start_offset: int,
+        end_offset: int,
+    ) -> str:
+        res = test_client.post(
+            f"/project/{project_id}/dataset/{dataset_id}/category",
+            headers={
+                "Authorization": f"Bearer {user_token}",
+            },
+            json={
+                "label_id": label_id,
+                "start_offset": start_offset,
+                "end_offset": end_offset,
+            },
+        )
+        assert res.status_code == 200
+        return res.json()["category_id"]
+
+    return _create_category
