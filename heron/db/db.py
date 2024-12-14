@@ -54,6 +54,14 @@ async def create_tables(conn: asyncpg.Pool):
         "text TEXT NOT NULL"
         ")"
     )
+    await conn.execute(
+        "CREATE TABLE IF NOT EXISTS labels ("
+        "id UUID PRIMARY KEY, "
+        "project_id UUID references projects(id), "
+        "name TEXT NOT NULL, "
+        "color VARCHAR(7) NOT NULL"
+        ")"
+    )
 
 
 async def get_connection(request: Request) -> AsyncGenerator[asyncpg.Connection, None]:

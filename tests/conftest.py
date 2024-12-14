@@ -121,3 +121,28 @@ def create_dataset(
         return res.json()["dataset_id"]
 
     return _create_dataset
+
+
+@pytest.fixture
+def create_label(
+    test_client: TestClient,
+    db: asyncpg.Connection,
+) -> Callable[..., str]:
+    """
+    Returns a function that creates a label and returns its id
+    """
+
+    def _create_label(
+        user_token: str, project_id: uuid.UUID, name: str, color: str
+    ) -> str:
+        res = test_client.post(
+            f"/project/{project_id}/label",
+            headers={
+                "Authorization": f"Bearer {user_token}",
+            },
+            json={"name": name, "color": color},
+        )
+        assert res.status_code == 200
+        return res.json()["label_id"]
+
+    return _create_label
