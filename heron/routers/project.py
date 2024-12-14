@@ -76,7 +76,7 @@ async def update_project(
     project: ProjectUpdateIn,
     conn: Annotated[asyncpg.Connection, Depends(get_connection)],
     current_user: Annotated[db_user.User, Depends(get_current_user)],
-):
+) -> db_project.Project:
     stored_project = await db_project.get_by_id(conn, project.id)
     if stored_project is None:
         # Project doesn't exist at all
@@ -92,9 +92,8 @@ async def update_project(
             status_code=401, detail="Not enough permissions to update project"
         )
 
-    await db_project.update_project(
-        conn,
-        db_project.Project(
-            **{**stored_project.model_dump(), **project.model_dump(exclude_unset=True)}
-        ),
+    updated_project = db_project.Project(
+        **{**stored_project.model_dump(), **project.model_dump(exclude_unset=True)}
     )
+    await db_project.update_project(conn, updated_project)
+    return updated_project

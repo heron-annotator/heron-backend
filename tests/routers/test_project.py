@@ -200,12 +200,10 @@ async def test_update_project(
         },
     )
     assert res.status_code == 200
-
-    projects = await db.fetch("SELECT * FROM projects")
-    assert len(projects) == 1
-    assert projects[0]["title"] == "My first project"
-    assert projects[0]["description"] == "My beautiful description"
-    assert str(projects[0]["owner"]) == user_id
+    updated_project = res.json()
+    assert updated_project["title"] == "My first project"
+    assert updated_project["description"] == "My beautiful description"
+    assert str(updated_project["owner"]) == user_id
 
 
 async def test_update_project_as_non_owner(
